@@ -1,14 +1,21 @@
+import os
 from fastapi import APIRouter
 from app.schemas import SimilarityRequest
-from app.utils import get_sentence_embedding, normalize_vector, cosine_similarity
-from transformers import AutoModel, AutoTokenizer
+from app.utils import normalize_vector, cosine_similarity
 import numpy as np
+import gensim
+from gensim.models import KeyedVectors
 
 router = APIRouter()
 
-# KLUE/BERT 모델과 토크나이저 로드
-tokenizer = AutoTokenizer.from_pretrained('klue/bert-base')
-model = AutoModel.from_pretrained('klue/bert-base')
+# 한국어 Word2Vec 모델 로드
+current_directory = os.path.dirname(os.path.abspath(__file__))
+file_path = os.path.join(current_directory, '..', 'ko.bin')
+absolute_file_path = os.path.abspath(file_path)
+print(f"Loading model from: {absolute_file_path}")
+
+# Word2Vec 모델 로드
+model = gensim.models.Word2Vec.load(absolute_file_path)
 
 @router.post("/")
 async def calculate_similarity(request: SimilarityRequest):
@@ -19,9 +26,15 @@ async def calculate_similarity(request: SimilarityRequest):
     speakingA = request.speakingA
     speakingB = request.speakingB
 
+    def get_word_vector(word, model):
+        if word in model.wv:
+            return model.wv[word]
+        else:
+            return np.zeros(model.vector_size)
+
     # 관심사를 벡터로 변환하고 정규화
-    vectorsA = [normalize_vector(get_sentence_embedding(interest, tokenizer, model)) for interest in interestsA]
-    vectorsB = [normalize_vector(get_sentence_embedding(interest, tokenizer, model)) for interest in interestsB]
+    vectorsA = [normalize_vector(get_word_vector(interest, model)) for interest in interestsA]
+    vectorsB = [normalize_vector(get_word_vector(interest, model)) for interest in interestsB]
 
     if not vectorsA or not vectorsB:
         return {"similarity": 0.0}
@@ -38,12 +51,10 @@ async def calculate_similarity(request: SimilarityRequest):
     speaking_listening_complementary = (speakingA + listeningB) / 20
 
     # 관심사/경청/발화 지수 전체 계산
-    #   overall_similarity = (
-        # 0.5 * interest_similarity +
-        # 0.25 * listening_speaking_complementary +
-        # 0.25 * speaking_listening_complementary
-    # )
-    
-    overall_similarity = interest_similarity
+    overall_similarity = (
+        0.5 * interest_similarity +
+        0.25 * listening_speaking_complementary +
+        0.25 * speaking_listening_complementary
+    )
 
-    return {"similarity": float(overall_similarity)}
+    return {"similarity": float(interest_similarity)}
