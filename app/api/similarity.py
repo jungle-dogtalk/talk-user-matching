@@ -47,14 +47,14 @@ async def calculate_similarity(request: SimilarityRequest):
     interest_similarity = cosine_similarity(vectorA, vectorB)
     
     # 경청 지수, 발화 지수 보완 지수 계산
-    listening_speaking_complementary = (listeningA + speakingB) / 20
-    speaking_listening_complementary = (speakingA + listeningB) / 20
+    # listening_speaking_complementary = (listeningA + speakingB) / 20
+    # speaking_listening_complementary = (speakingA + listeningB) / 20
 
     # 관심사/경청/발화 지수 전체 계산
-    overall_similarity = (
-        0.5 * interest_similarity +
-        0.25 * listening_speaking_complementary +
-        0.25 * speaking_listening_complementary
-    )
+    # overall_similarity = (
+    #     0.5 * interest_similarity +
+    #     0.25 * listening_speaking_complementary +
+    #     0.25 * speaking_listening_complementary
+    # )
 
     return {"similarity": float(interest_similarity)}
