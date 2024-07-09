@@ -21,10 +21,10 @@ model = gensim.models.Word2Vec.load(absolute_file_path)
 async def calculate_similarity(request: SimilarityRequest):
     interestsA = request.interestsA
     interestsB = request.interestsB
-    listeningA = request.listeningA
-    listeningB = request.listeningB
-    speakingA = request.speakingA
-    speakingB = request.speakingB
+    # listeningA = request.listeningA
+    # listeningB = request.listeningB
+    # speakingA = request.speakingA
+    # speakingB = request.speakingB
 
     def get_word_vector(word, model):
         if word in model.wv:

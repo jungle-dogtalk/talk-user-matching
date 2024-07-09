@@ -7,7 +7,7 @@ from typing import List
 class SimilarityRequest(BaseModel):
     interestsA: List[str]
     interestsB: List[str]
-    listeningA: int
-    listeningB: int
-    speakingA: int
-    speakingB: int
+    # listeningA: int
+    # listeningB: int
+    # speakingA: int
+    # speakingB: int
