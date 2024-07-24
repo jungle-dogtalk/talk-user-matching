@@ -40,7 +40,11 @@ async def calculate_similarity(request: SimilarityRequest):
     AIvectorsA = [normalize_vector(get_word_vector(interest, model)) for interest in AIinterestsA]
     AIvectorsB = [normalize_vector(get_word_vector(interest, model)) for interest in AIinterestsB]
 
+    # 관심사 벡터가 비어있을 때 유사도를 0.0
     if not vectorsA or not vectorsB:
+        return {"similarity": 0.0}
+
+    if not AIvectorsA or not AIvectorsB:
         return {"similarity": 0.0}
 
     # 관심사 벡터의 평균 계산
