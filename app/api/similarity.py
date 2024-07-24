@@ -21,10 +21,11 @@ model = gensim.models.Word2Vec.load(absolute_file_path)
 async def calculate_similarity(request: SimilarityRequest):
     interestsA = request.interestsA
     interestsB = request.interestsB
-    # listeningA = request.listeningA
-    # listeningB = request.listeningB
-    # speakingA = request.speakingA
-    # speakingB = request.speakingB
+
+    AIinterestsA = request.AIinterestsA
+    AIinterestsB = request.AIinterestsB
+
+  
 
     def get_word_vector(word, model):
         if word in model.wv:
@@ -36,6 +37,9 @@ async def calculate_similarity(request: SimilarityRequest):
     vectorsA = [normalize_vector(get_word_vector(interest, model)) for interest in interestsA]
     vectorsB = [normalize_vector(get_word_vector(interest, model)) for interest in interestsB]
 
+    AIvectorsA = [normalize_vector(get_word_vector(interest, model)) for interest in AIinterestsA]
+    AIvectorsB = [normalize_vector(get_word_vector(interest, model)) for interest in AIinterestsB]
+
     if not vectorsA or not vectorsB:
         return {"similarity": 0.0}
 
@@ -43,18 +47,17 @@ async def calculate_similarity(request: SimilarityRequest):
     vectorA = normalize_vector(np.mean(vectorsA, axis=0))
     vectorB = normalize_vector(np.mean(vectorsB, axis=0))
 
+    AIvectorA = normalize_vector(np.mean(AIvectorsA, axis=0))
+    AIvectorB = normalize_vector(np.mean(AIvectorsB, axis=0))
+
     # 코사인 유사도 계산
     interest_similarity = cosine_similarity(vectorA, vectorB)
+    AI_interest_similarity = cosine_similarity(AIvectorA, AIvectorB)
     
-    # 경청 지수, 발화 지수 보완 지수 계산
-    # listening_speaking_complementary = (listeningA + speakingB) / 20
-    # speaking_listening_complementary = (speakingA + listeningB) / 20
 
-    # 관심사/경청/발화 지수 전체 계산
-    # overall_similarity = (
-    #     0.5 * interest_similarity +
-    #     0.25 * listening_speaking_complementary +
-    #     0.25 * speaking_listening_complementary
-    # )
-
-    return {"similarity": float(interest_similarity)}
+     # 가중치를 적용한 전체 유사도 계산 (기본 관심사: 70%, AI 관심사: 30%)
+    weight_interests = 0.7
+    weight_AI_interests = 0.3
+    total_similarity = (interest_similarity * weight_interests) + (AI_interest_similarity * weight_AI_interests)
+    
+    return {"similarity": float(total_similarity)}
